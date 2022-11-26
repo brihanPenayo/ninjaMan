@@ -1,0 +1,334 @@
+<html>
+
+<head>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .row {
+            line-height: 0;
+        }
+
+        .wall {
+            background-color: blue;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+
+        .blank {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+
+        .sushi {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('./img/sushi.png');
+            background-size: contain;
+        }
+
+        .onigiri {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('./img/onigiri.png');
+            background-size: contain;
+        }
+
+        #ninjaman {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('./img/ninja.gif');
+            background-size: contain;
+            position: absolute;
+        }
+
+        #fantasma {
+            background-color: black;
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('./img/bluey.gif');
+            background-size: contain;
+            position: absolute;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='world'></div>
+    <div id='ninjaman'></div>
+    <div id='fantasma'></div>
+    <h1 id="puntaje"></h1>
+    <h1 id="vidas"></h1>
+</body>
+<script type="text/javascript">
+
+    var world = [[]];
+    var puntaje = 0;
+    var vidas = 3;
+    var intercaladoDir = true;
+    var sushis = 0;
+    function nuevoJuego() {
+        vidas = 3;
+        world = [[]];
+        puntaje = 0;
+        ninjaman.x = 1;
+        ninjaman.y = 1;
+        sushis = 0;
+        definirVariableWorld();
+        drawWorld();
+        drawNinjaman();
+        drawFantasma();
+        verificar = setInterval(() => {
+            disminuirVidas();
+            verificarGanado();
+        }, 100
+        );
+
+    }
+    var worldDict = {
+        0: 'blank',
+        1: 'wall',
+        2: 'sushi',
+        3: 'onigiri'
+    }
+    var ninjaman = {
+        x: 1,
+        y: 1
+    }
+    var fantasma = {
+        x: 14,
+        y: 14
+    }
+    function espacioRandom() {
+        var probabilidades = [0, 0, 0, 0, 1, 2, 0, 3];
+        var idx = Math.floor(Math.random() * probabilidades.length);
+        return probabilidades[idx];
+    }
+    function definirVariableWorld() {
+        for (let x = 0; x < 16; x++) {
+            for (let y = 0; y < 16; y++) {
+                if (x == 0 || x == 15 || y == 0 || y == 15) {
+                    world[x].push(1);
+                }
+                else {
+                    let espacio = espacioRandom();
+                    world[x].push(espacio);
+                    if (espacio == 2 || espacio == 3) sushis++;
+                }
+            }
+            world.push([]);
+        }
+        if (world[1][1] > 1) {
+            sushis--;
+        }
+        if (world[14][14] > 1) {
+            sushis--;
+        }
+        world[1][1] = 0;
+        world[14][14] = 0;
+    }
+    function disminuirVidas() {
+        if (fantasma.x == ninjaman.x && fantasma.y == ninjaman.y) {
+            vidas--;
+            fantasma.x = 14;
+            fantasma.y = 14;
+            drawNinjaman();
+            drawFantasma();
+        }
+        else if (vidas == 0) {
+            clearInterval(verificar);
+            alert("Te has quedado sin vidas")
+            nuevoJuego();
+        }
+        document.getElementById("vidas").innerHTML = `Te quedan: ${vidas} vida/s.`;
+    }
+    function verificarGanado() {
+        if (sushis < 1) {
+            clearInterval(verificar);
+            alert("¡Has ganado!")
+            nuevoJuego();
+        }
+    }
+    function drawWorld() {
+        document.getElementById('puntaje').innerHTML = `Puntaje: ${puntaje}`;
+        output = "";
+        for (var row = 0; row < world.length; row++) {
+            output += "<div class = 'row'>"
+            for (var x = 0; x < world[row].length; x++) {
+                output += "<div class = '" + worldDict[world[row][x]] + "'></div>"
+            }
+            output += "</div>"
+        }
+
+        document.getElementById('world').innerHTML = output;
+    }
+    function drawNinjaman() {
+        document.getElementById('ninjaman').style.top = ninjaman.y * 40 + 'px'
+        document.getElementById('ninjaman').style.left = ninjaman.x * 40 + 'px'
+    }
+
+    function drawFantasma() {
+        document.getElementById('fantasma').style.top = fantasma.y * 40 + 'px'
+        document.getElementById('fantasma').style.left = fantasma.x * 40 + 'px'
+    }
+
+
+    document.onkeydown = function (e) {
+
+        if (e.keyCode == 37) { // Izquierda
+            if (world[ninjaman.y][ninjaman.x - 1] != 1) {
+                ninjaman.x--
+                if (world[ninjaman.y][ninjaman.x] == 2) {
+                    puntaje += 5;
+                    sushis--;
+                }
+                else if (world[ninjaman.y][ninjaman.x] == 3) {
+                    puntaje += 10;
+                    sushis--;
+                }
+            }
+        }
+        if (e.keyCode == 39) { // derecha
+            if (world[ninjaman.y][ninjaman.x + 1] != 1) {
+                ninjaman.x++;
+                if (world[ninjaman.y][ninjaman.x] == 2) {
+                    puntaje += 5;
+                    sushis--;
+                }
+                else if (world[ninjaman.y][ninjaman.x] == 3) {
+                    puntaje += 10;
+                    sushis--;
+                }
+            }
+        }
+        if (e.keyCode == 38) { // Arriba 
+            if (world[ninjaman.y - 1][ninjaman.x] != 1) {
+                ninjaman.y--;
+                if (world[ninjaman.y][ninjaman.x] == 2) {
+                    puntaje += 5;
+                    sushis--;
+                }
+                else if (world[ninjaman.y][ninjaman.x] == 3) {
+                    puntaje += 10;
+                    sushis--;
+                }
+            }
+        }
+        if (e.keyCode == 40) { // Abajo
+            if (world[ninjaman.y + 1][ninjaman.x] != 1) {
+                ninjaman.y++;
+                if (world[ninjaman.y][ninjaman.x] == 2) {
+                    puntaje += 5;
+                    sushis--;
+                }
+                else if (world[ninjaman.y][ninjaman.x] == 3) {
+                    puntaje += 10;
+                    sushis--;
+                }
+            }
+        }
+        world[ninjaman.y][ninjaman.x] = 0;
+        drawWorld();
+        drawNinjaman();
+
+    }
+    function moverFantasmaHorizontal(noSeMovio) {
+        if (ninjaman.x < fantasma.x && noSeMovio) {
+            if (world[fantasma.y][fantasma.x - 1] != 1) {
+                fantasma.x--;
+                noSeMovio = false;
+            }
+        }
+        if (ninjaman.x > fantasma.x && noSeMovio) {
+            if (world[fantasma.y][fantasma.x + 1] != 1) {
+                fantasma.x++;
+                noSeMovio = false;
+            }
+        }
+        return noSeMovio;
+    }
+    function moverFantasmaVertical(noSeMovio) {
+        if (ninjaman.y < fantasma.y && noSeMovio) {
+            if (world[fantasma.y - 1][fantasma.x] != 1) {
+                fantasma.y--;
+                noSeMovio = false;
+            }
+        }
+        if (ninjaman.y > fantasma.y && noSeMovio) {
+            if (world[fantasma.y + 1][fantasma.x] != 1) {
+                fantasma.y++;
+                noSeMovio = false;
+            }
+        }
+        return noSeMovio;
+    }
+    function moverFantasmaAleatorio(noSeMovio) {
+        let opcion = Math.floor(Math.random() * 4);
+        switch (opcion) {
+            case 0:
+                if (world[fantasma.y][fantasma.x - 1] != 1) {
+                    fantasma.x--;
+                    return false;
+                }
+            case 1:
+                if (world[fantasma.y][fantasma.x + 1] != 1) {
+                    fantasma.x++;
+                    return false;
+                }
+            case 2:
+                if (world[fantasma.y - 1][fantasma.x] != 1) {
+                    fantasma.y--;
+                    return false;
+                }
+            case 3:
+                if (world[fantasma.y + 1][fantasma.x] != 1) {
+                    fantasma.y++;
+                    return false;
+                }
+        }
+        return noSeMovio;
+    }
+    function moverFantasma() {
+        var noSeMovio = true;
+        if (intercaladoDir) {
+            noSeMovio = moverFantasmaHorizontal(noSeMovio);
+            noSeMovio = moverFantasmaVertical(noSeMovio);
+        } else {
+            noSeMovio = moverFantasmaVertical(noSeMovio);
+            noSeMovio = moverFantasmaHorizontal(noSeMovio);
+        }
+        while (noSeMovio) {
+            noSeMovio = moverFantasmaAleatorio();
+        }
+        intercaladoDir = !intercaladoDir;
+        drawFantasma();
+    }
+
+    definirVariableWorld();
+    drawWorld();
+    drawNinjaman();
+    drawFantasma();
+    setInterval(() => {
+        moverFantasma();
+    }, 350
+    );
+    var verificar = setInterval(() => {
+        disminuirVidas();
+        verificarGanado();
+    }, 10
+    );
+</script>
+
+</html>
